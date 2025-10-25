@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>AA GYM 3D 로고(GLB) AR 👻 (alphaTest)</title>
+  <title>AA GYM HALLOWEEN 👻</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
     html,body{margin:0;height:100%;background:#000;color:#fff;overflow:hidden}
+    body{font-family:-apple-system,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
     #gate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:9999;text-align:center;padding:24px}
     #gate button{margin-top:14px;padding:12px 16px;border:0;border-radius:12px;font-weight:800}
     #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700}
@@ -16,39 +17,36 @@
 <body>
   <div id="gate">
     <h2 style="margin:0 0 8px 0;">카메라 권한이 필요합니다</h2>
-    <div>버튼을 누르면 카메라를 켜고 AR을 시작합니다.</div>
+    <div>버튼을 눌러 카메라를 켠 뒤 AR을 시작하세요. (Safari 또는 WebXR Viewer 권장)</div>
     <button id="startBtn">카메라 켜고 시작하기</button>
     <div id="err" style="color:#ffb3b3;margin-top:10px;display:none;"></div>
   </div>
-  <div id="hint" hidden>마커를 비추면 3D 로고(GLB)가 나타납니다 👻</div>
+
+  <div id="hint" hidden>AA GYM 유령 로고(마커)를 화면에 비춰주세요 👻</div>
 
   <a-scene id="scene" style="display:none"
-    mindar-image="imageTargetSrc: ./targets.mind?v=81;"
+    mindar-image="imageTargetSrc: ./targets.mind?v=10;"
     color-space="sRGB"
-    renderer="alpha:true; colorManagement:true; physicallyCorrectLights:true"
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
     embedded>
-
+    
     <a-assets>
-      <a-asset-item id="logo3d" src="./aagym_logo_plane.glb?v=81"></a-asset-item>
+      <img id="ghostLogo" src="./aagym_ghost_logo.png?v=10">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex:0">
-      <!-- alphaTest 로 테두리(배경선) 제거, glow 살림 -->
-      <a-gltf-model src="#logo3d"
-        position="0 0 0"
-        rotation="0 0 0"
-        scale="3 3 3"
-        material="transparent:true; alphaTest:0.2; depthTest:true; depthWrite:true">
-        <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.12 0"></a-animation>
-        <a-animation attribute="rotation" dur="3500" direction="alternate" repeat="indefinite" to="0 15 0"></a-animation>
-      </a-gltf-model>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-image src="#ghostLogo" position="0 0 0" width="2.8" height="2.8"
+        transparent="true" alpha-test="0.1" material="side:double; shader:flat">
+        <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.15 0"></a-animation>
+        <a-animation attribute="rotation" dur="3000" direction="alternate" repeat="indefinite" to="0 25 0"></a-animation>
+      </a-image>
 
+      <a-entity light="type:point; intensity:1.5; distance:4; decay:2" position="0 0.5 0"></a-entity>
       <a-entity light="type:ambient; intensity:0.5"></a-entity>
-      <a-entity light="type:directional; intensity:1.3" position="0.6 1 0.6"></a-entity>
     </a-entity>
   </a-scene>
 
@@ -58,11 +56,21 @@
     const scene=document.getElementById('scene');
     const hint=document.getElementById('hint');
     const err=document.getElementById('err');
-    async function activateCameraOnce(){const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});s.getTracks().forEach(t=>t.stop());}
-    async function startAR(){err.style.display='none';try{await activateCameraOnce();gate.style.display='none';scene.style.display='block';hint.hidden=false;}catch(e){err.textContent='❌ 카메라 접근 실패: '+(e&&e.message?e.message:e);err.style.display='block';}}
-    window.addEventListener('load', startAR);
-    startBtn.addEventListener('click', startAR);
-    document.addEventListener('touchstart', ()=>{ if(scene.style.display!=='block') startAR(); }, {once:true});
+
+    async function startFlow(){
+      err.style.display='none';
+      try{
+        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        s.getTracks().forEach(t=>t.stop());
+        gate.style.display='none';
+        scene.style.display='block';
+        hint.hidden=false;
+      }catch(e){
+        err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
+        err.style.display='block';
+      }
+    }
+    startBtn.addEventListener('click', startFlow);
   </script>
 </body>
 </html>
