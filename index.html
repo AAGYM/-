@@ -3,24 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <title>AA GYM HALLOWEEN 👻 (Final)</title>
+    <title>AA GYM AR 디버그 (마커 인식 확인용)</title>
     <!-- A-Frame + MindAR -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
       html, body { margin:0; height:100%; background:#000; color:#fff; overflow:hidden; }
       body { font-family:-apple-system,system-ui,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; }
+      #hud {
+        position: fixed; top: 10px; left: 10px; padding: 10px 12px; border-radius: 12px;
+        background: rgba(0,0,0,.55); font-weight: 800; z-index: 9999; font-size: 14px;
+      }
+      #dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#f33; margin-right:6px; vertical-align:middle; }
       #overlay {
         position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
         max-width: 90vw; text-align: center; color: #fff;
         background: rgba(0, 0, 0, 0.45); padding: 8px 12px; border-radius: 12px;
         font-weight: 600; font-size: 16px;
       }
+      .ok { background:#14c614 !important; }
     </style>
   </head>
 
   <body>
-    <div id="overlay">👻 AA GYM 로고를 비추면 유령이 나타납니다!</div>
+    <div id="hud"><span id="dot"></span><span id="label">카메라 켜짐 · 마커 찾는 중…</span></div>
+    <div id="overlay">AA GYM 로고(마커)를 화면에 크게 비추면 디버그 텍스트가 나타납니다.</div>
 
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind;"
@@ -28,23 +35,51 @@
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
+      embedded
     >
       <a-assets>
-        <!-- 유령톤 로고 -->
-        <img id="ghostLogo" src="./aagym_ghost_logo.png" />
+        <!-- 선택: 이미지가 있다면 다음 줄의 src를 실제 파일명으로 바꿔도 됩니다 -->
+        <!-- <img id="ghostLogo" src="./aagym_ghost_logo.png" /> -->
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 로고 유령: 둥실 떠다니는 애니메이션 -->
-        <a-image src="#ghostLogo" position="0 0 0" width="1" height="1" transparent="true" alpha-test="0.1">
-          <a-animation attribute="position" dur="1800" direction="alternate" repeat="indefinite" to="0 0.08 0"></a-animation>
-          <a-animation attribute="rotation" dur="2400" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
-        </a-image>
-        <!-- 은은한 빛 -->
-        <a-entity light="type:point; intensity:0.9; distance:2; decay:2" position="0 0.3 0"></a-entity>
+      <a-entity id="anchor" mindar-image-target="targetIndex: 0">
+        <!-- ✅ 디버그용: 마커 인식되면 반드시 보이는 대체 오브젝트들 -->
+        <a-entity position="0 0 0">
+          <!-- 큼직한 보라 네온 텍스트 -->
+          <a-text value="👻 HALLOWEEN GHOST!" color="#ffffff" align="center" width="2.4" position="0 0.4 0.01"></a-text>
+          <!-- 반투명 보라 판 -->
+          <a-plane width="1.8" height="1.0" color="#7a4cff" opacity="0.35" position="0 -0.15 0.01"></a-plane>
+          <!-- 빛 효과 -->
+          <a-entity light="type:point; intensity:1.2; distance:3; decay:2" position="0 0.3 0"></a-entity>
+          <!-- 약간의 둥실둥실 애니메이션 -->
+          <a-animation attribute="position" dur="1400" direction="alternate" repeat="indefinite" to="0 0.06 0"></a-animation>
+          <a-animation attribute="rotation" dur="2200" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
+        </a-entity>
+
+        <!-- (선택) 로고 이미지도 함께 보이게 하려면 주석 해제 후 사용
+        <a-image src="#ghostLogo" position="0 0 0" width="1" height="1" transparent="true" alpha-test="0.1"></a-image>
+        -->
       </a-entity>
     </a-scene>
+
+    <script>
+      const dot = document.getElementById('dot');
+      const label = document.getElementById('label');
+      const anchor = document.getElementById('anchor');
+
+      anchor.addEventListener('targetFound', () => {
+        dot.classList.add('ok');
+        label.textContent = '마커 인식됨! (디버그 오브젝트 표시 중)';
+        console.log('[DEBUG] targetFound');
+      });
+
+      anchor.addEventListener('targetLost', () => {
+        dot.classList.remove('ok');
+        label.textContent = '마커 찾는 중…';
+        console.log('[DEBUG] targetLost');
+      });
+    </script>
   </body>
 </html>
