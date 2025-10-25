@@ -2,44 +2,96 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>AA GYM HALLOWEEN 👻</title>
-    <script src="https://cdn.jsdelivr.net/gh/MindAR-js/aframe/dist/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/MindAR-js/aframe/dist/mindar-image-aframe.prod.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>AA GYM HALLOWEEN 👻 (WebXR Viewer 권장)</title>
+    <!-- A-Frame + MindAR (CDN) -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-      body { margin: 0; overflow: hidden; background: black; }
-      #overlay {
-        position: fixed;
-        bottom: 20px;
-        width: 100%;
-        text-align: center;
-        color: white;
-        font-family: 'Pretendard', sans-serif;
-        font-size: 18px;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 10px;
+      html, body { margin:0; height:100%; background:#000; color:#fff; }
+      body { font-family:-apple-system,system-ui,'Apple SD Gothic Neo','Noto Sans KR',Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+      #gate {
+        position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+        background:#000; z-index:9999; text-align:center; padding:24px;
       }
+      #gate button { margin-top:14px; padding:12px 16px; border:0; border-radius:12px; font-weight:800; font-size:16px; }
+      #err { color:#ffb3b3; margin-top:10px; display:none; max-width:520px; }
+      #overlay {
+        position: fixed; bottom: 18px; left:50%; transform:translateX(-50%);
+        max-width: 92vw; text-align: center; color: white;
+        background: rgba(0, 0, 0, 0.45); padding: 8px 12px; border-radius:12px; font-weight:700;
+      }
+      a-scene { display:none; }
     </style>
   </head>
-
   <body>
+    <!-- 권한/시작 게이트 -->
+    <div id="gate">
+      <h2 style="margin:0 0 8px 0;">카메라 권한이 필요합니다</h2>
+      <div>버튼을 눌러 카메라를 켠 뒤 AR을 시작하세요. (WebXR Viewer 앱 권장)</div>
+      <button id="startBtn">카메라 켜고 시작하기</button>
+      <div id="err"></div>
+    </div>
+
+    <!-- AR Scene -->
     <a-scene
-      mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@master/examples/image-tracking/assets/card-example/card.mind;"
+      id="scene"
+      mindar-image="imageTargetSrc: https://raw.githubusercontent.com/hiukim/mind-ar-js/master/examples/image-tracking/assets/card-example/card.mind;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
-      <a-assets>
-        <a-asset-item id="ghostModel" src="https://cdn.jsdelivr.net/gh/AA-GYM/assets/ghost.glb"></a-asset-item>
-      </a-assets>
-
+      <a-assets></a-assets>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+      <!-- 간단한 유령(기하로 구성) -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model src="#ghostModel" scale="0.5 0.5 0.5" position="0 -0.25 0"></a-gltf-model>
+        <a-sphere radius="0.18" color="#FFFFFF" position="0 0.25 0" opacity="0.97"></a-sphere>
+        <a-cylinder radius="0.16" height="0.06" color="#FFFFFF" position="0 0.08 0" opacity="0.95"></a-cylinder>
+        <a-cylinder radius="0.13" height="0.05" color="#FFFFFF" position="0 0.03 0" opacity="0.93"></a-cylinder>
+        <a-cylinder radius="0.09" height="0.04" color="#FFFFFF" position="0 -0.01 0" opacity="0.90"></a-cylinder>
+        <a-sphere radius="0.025" color="#111111" position="-0.055 0.29 0.15"></a-sphere>
+        <a-sphere radius="0.025" color="#111111" position="0.055 0.29 0.15"></a-sphere>
+        <a-cylinder radius="0.028" height="0.02" color="#111111" position="0 0.245 0.16" rotation="90 0 0"></a-cylinder>
+        <a-cylinder radius="0.015" height="0.5" color="#444444" position="0 0.12 0" rotation="0 0 90"></a-cylinder>
+        <a-torus radius="0.07" radius-tubular="0.02" color="#FF8C00" position="-0.25 0.12 0"></a-torus>
+        <a-torus radius="0.07" radius-tubular="0.02" color="#FF8C00" position="0.25 0.12 0"></a-torus>
+        <a-animation attribute="position" dur="1800" direction="alternate" repeat="indefinite" to="0 0.04 0"></a-animation>
+        <a-animation attribute="rotation" dur="2600" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
       </a-entity>
+    </a-entity>
     </a-scene>
 
-    <div id="overlay">포스터(마커 이미지)를 비추면 👻 유령이 나타납니다</div>
+    <div id="overlay" style="display:none;">포스터(마커 이미지)를 비추면 👻 유령이 나타납니다</div>
+
+    <script>
+      const gate = document.getElementById('gate');
+      const startBtn = document.getElementById('startBtn');
+      const err = document.getElementById('err');
+      const scene = document.getElementById('scene');
+      const overlay = document.getElementById('overlay');
+      let tempStream = null;
+
+      async function startFlow() {
+        err.style.display='none';
+        try {
+          // 1) 사용자 제스처로 카메라 선권한 확보 (WebXR Viewer/Safari 우회)
+          tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          // 열렸으면 바로 정지 (MindAR가 이어서 사용)
+          tempStream.getTracks().forEach(t => t.stop());
+          tempStream = null;
+          // 2) 게이트 닫고 AR씬 표시 → MindAR 초기화 유도
+          gate.style.display='none';
+          scene.style.display='block';
+          overlay.style.display='block';
+        } catch (e) {
+          err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
+          err.style.display='block';
+        }
+      }
+
+      startBtn.addEventListener('click', startFlow);
+    </script>
   </body>
 </html>
