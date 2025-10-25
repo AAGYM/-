@@ -28,16 +28,24 @@
 
   <div id="hint" hidden>AA GYM 유령 로고(마커)를 화면에 크게 비춰주세요 👻</div>
 
-  <a-scene
-    id="scene"
-    style="display:none"
-    mindar-image="imageTargetSrc: ./targets.mind?v=3;"
-    color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    embedded
-  >
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind" 
+          color-space="sRGB" 
+          embedded 
+          vr-mode-ui="enabled: false" 
+          device-orientation-permission-ui="enabled: false">
+  
+  <a-assets>
+    <img id="ghostLogo" src="./aagym_ghost_logo.png">
+  </a-assets>
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity mindar-image-target="targetIndex: 0">
+    <a-image src="#ghostLogo" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0"></a-image>
+  </a-entity>
+
+</a-scene>
+  
     <a-assets>
       <!-- 스크린샷대로 정확한 파일명 + 캐시무력화 쿼리 -->
       <img id="ghostLogo" src="./aagym_ghost_logo.png?v=3">
