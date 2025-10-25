@@ -28,65 +28,58 @@
 
   <div id="hint" hidden>AA GYM 유령 로고(마커)를 화면에 크게 비춰주세요 👻</div>
 
-  <a-scene mindar-image="imageTargetSrc: ./targets.mind" 
-          color-space="sRGB" 
-          embedded 
-          vr-mode-ui="enabled: false" 
-          device-orientation-permission-ui="enabled: false">
-  
-  <a-assets>
-    <img id="ghostLogo" src="./aagym_ghost_logo.png">
-  </a-assets>
-
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-  <a-entity mindar-image-target="targetIndex: 0">
-    <a-image src="#ghostLogo" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0"></a-image>
-  </a-entity>
-
-</a-scene>
-  
+  <!-- ⚠️ 단 한 번만! id="scene" 필수 -->
+  <a-scene
+    id="scene"
+    style="display:none"
+    mindar-image="imageTargetSrc: ./targets.mind?v=5;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+  >
     <a-assets>
-      <!-- 스크린샷대로 정확한 파일명 + 캐시무력화 쿼리 -->
-      <img id="ghostLogo" src="./aagym_ghost_logo.png?v=3">
+      <!-- 실제 파일명 정확히 일치! 필요시 이름만 바꾸세요 -->
+      <img id="ghostLogo" src="./aagym_ghost_logo.png?v=5">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <!-- 유령 로고 이미지 -->
+      <!-- 유령 로고 이미지 (투명 PNG) -->
       <a-image src="#ghostLogo" position="0 0 0" width="1" height="1"
                transparent="true" alpha-test="0.1" material="side:double; shader:flat">
-        <!-- 둥실 애니메이션 -->
         <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.06 0"></a-animation>
         <a-animation attribute="rotation" dur="2400" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
       </a-image>
+
       <!-- 은은한 라이트 -->
       <a-entity light="type:point; intensity:1; distance:2; decay:2" position="0 0.3 0"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
-    const gate=document.getElementById('gate');
-    const startBtn=document.getElementById('startBtn');
-    const scene=document.getElementById('scene');
-    const hint=document.getElementById('hint');
-    const err=document.getElementById('err');
+    const gate = document.getElementById('gate');
+    const startBtn = document.getElementById('startBtn');
+    const scene = document.getElementById('scene');
+    const hint = document.getElementById('hint');
+    const err = document.getElementById('err');
 
     async function startFlow(){
       err.style.display='none';
       try{
-        // 1) 사용자 제스처로 선권한 획득 (iOS에서 중요)
-        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-        s.getTracks().forEach(t=>t.stop()); // 권한만 얻고 정지
+        // 1) 사용자 제스처로 카메라 선권한 획득 (iOS에서 중요)
+        const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        s.getTracks().forEach(t => t.stop()); // 권한만 얻고 정지
 
         // 2) AR 시작
-        gate.style.display='none';
-        scene.style.display='block';
-        hint.hidden=false;
+        gate.style.display = 'none';
+        scene.style.display = 'block';
+        hint.hidden = false;
       }catch(e){
-        err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
-        err.style.display='block';
+        err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
+        err.style.display = 'block';
       }
     }
     startBtn.addEventListener('click', startFlow);
