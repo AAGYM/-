@@ -4,11 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>AA GYM HALLOWEEN 👻</title>
-
-  <!-- A-Frame + MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
   <style>
     html,body{margin:0;height:100%;background:#000;color:#fff;overflow:hidden}
     body{font-family:-apple-system,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
@@ -18,7 +15,6 @@
   </style>
 </head>
 <body>
-  <!-- iOS 안정화를 위해 사용자 버튼으로 먼저 카메라 권한 획득 -->
   <div id="gate">
     <h2 style="margin:0 0 8px 0;">카메라 권한이 필요합니다</h2>
     <div>버튼을 눌러 카메라를 켠 뒤 AR을 시작하세요. (Safari 또는 WebXR Viewer 권장)</div>
@@ -26,60 +22,52 @@
     <div id="err" style="color:#ffb3b3;margin-top:10px;display:none;"></div>
   </div>
 
-  <div id="hint" hidden>AA GYM 유령 로고(마커)를 화면에 크게 비춰주세요 👻</div>
+  <div id="hint" hidden>AA GYM 유령 로고(마커)를 화면에 비춰주세요 👻</div>
 
-  <!-- ⚠️ 단 한 번만! id="scene" 필수 -->
-  <a-scene
-    id="scene"
-    style="display:none"
-    mindar-image="imageTargetSrc: ./targets.mind?v=5;"
+  <a-scene id="scene" style="display:none"
+    mindar-image="imageTargetSrc: ./targets.mind?v=10;"
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    embedded
-  >
+    embedded>
+    
     <a-assets>
-      <!-- 실제 파일명 정확히 일치! 필요시 이름만 바꾸세요 -->
-      <img id="ghostLogo" src="./aagym_ghost_logo.png?v=5">
+      <img id="ghostLogo" src="./aagym_ghost_logo.png?v=10">
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <!-- 유령 로고 이미지 (투명 PNG) -->
-      <a-image src="#ghostLogo" position="0 0 0" width="1" height="1"
-               transparent="true" alpha-test="0.1" material="side:double; shader:flat">
-        <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.06 0"></a-animation>
-        <a-animation attribute="rotation" dur="2400" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
+      <a-image src="#ghostLogo" position="0 0 0" width="2.8" height="2.8"
+        transparent="true" alpha-test="0.1" material="side:double; shader:flat">
+        <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.15 0"></a-animation>
+        <a-animation attribute="rotation" dur="3000" direction="alternate" repeat="indefinite" to="0 25 0"></a-animation>
       </a-image>
 
-      <!-- 은은한 라이트 -->
-      <a-entity light="type:point; intensity:1; distance:2; decay:2" position="0 0.3 0"></a-entity>
+      <a-entity light="type:point; intensity:1.5; distance:4; decay:2" position="0 0.5 0"></a-entity>
+      <a-entity light="type:ambient; intensity:0.5"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
-    const gate = document.getElementById('gate');
-    const startBtn = document.getElementById('startBtn');
-    const scene = document.getElementById('scene');
-    const hint = document.getElementById('hint');
-    const err = document.getElementById('err');
+    const gate=document.getElementById('gate');
+    const startBtn=document.getElementById('startBtn');
+    const scene=document.getElementById('scene');
+    const hint=document.getElementById('hint');
+    const err=document.getElementById('err');
 
     async function startFlow(){
       err.style.display='none';
       try{
-        // 1) 사용자 제스처로 카메라 선권한 획득 (iOS에서 중요)
-        const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-        s.getTracks().forEach(t => t.stop()); // 권한만 얻고 정지
-
-        // 2) AR 시작
-        gate.style.display = 'none';
-        scene.style.display = 'block';
-        hint.hidden = false;
+        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        s.getTracks().forEach(t=>t.stop());
+        gate.style.display='none';
+        scene.style.display='block';
+        hint.hidden=false;
       }catch(e){
-        err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
-        err.style.display = 'block';
+        err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
+        err.style.display='block';
       }
     }
     startBtn.addEventListener('click', startFlow);
