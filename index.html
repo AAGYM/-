@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>AA GYM 3D 로고(GLB) AR 👻</title>
+  <title>AA GYM 3D 로고(GLB) AR 👻 (alphaTest)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
@@ -23,21 +23,30 @@
   <div id="hint" hidden>마커를 비추면 3D 로고(GLB)가 나타납니다 👻</div>
 
   <a-scene id="scene" style="display:none"
-    mindar-image="imageTargetSrc: ./targets.mind?v=80;"
-    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
-    vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" embedded>
+    mindar-image="imageTargetSrc: ./targets.mind?v=81;"
+    color-space="sRGB"
+    renderer="alpha:true; colorManagement:true; physicallyCorrectLights:true"
+    vr-mode-ui="enabled:false"
+    device-orientation-permission-ui="enabled:false"
+    embedded>
 
     <a-assets>
-      <a-asset-item id="logo3d" src="./aagym_logo_plane.glb?v=80"></a-asset-item>
+      <a-asset-item id="logo3d" src="./aagym_logo_plane.glb?v=81"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex:0">
-      <a-gltf-model src="#logo3d" position="0 0 0" rotation="0 0 0" scale="3 3 3">
+      <!-- alphaTest 로 테두리(배경선) 제거, glow 살림 -->
+      <a-gltf-model src="#logo3d"
+        position="0 0 0"
+        rotation="0 0 0"
+        scale="3 3 3"
+        material="transparent:true; alphaTest:0.2; depthTest:true; depthWrite:true">
         <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.12 0"></a-animation>
         <a-animation attribute="rotation" dur="3500" direction="alternate" repeat="indefinite" to="0 15 0"></a-animation>
       </a-gltf-model>
+
       <a-entity light="type:ambient; intensity:0.5"></a-entity>
       <a-entity light="type:directional; intensity:1.3" position="0.6 1 0.6"></a-entity>
     </a-entity>
