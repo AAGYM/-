@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Camera Test</title>
+  <style>
+    html,body{margin:0;height:100%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    video{width:90%;max-width:400px;border:3px solid #0f0;border-radius:8px}
+    button{margin-top:16px;padding:10px 16px;border:none;border-radius:8px;font-weight:600;background:#0f0;color:#000}
+  </style>
+</head>
+<body>
+  <h2>📷 카메라 테스트</h2>
+  <video id="preview" autoplay playsinline></video>
+  <button id="start">카메라 켜기</button>
+  <p id="status"></p>
+
+  <script>
+    const video=document.getElementById('preview');
+    const status=document.getElementById('status');
+    document.getElementById('start').onclick=async()=>{
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+        video.srcObject=stream;
+        status.textContent="✅ 카메라 작동 중입니다!";
+      }catch(err){
+        status.textContent="❌ 카메라 접근 실패: "+err.message;
+      }
+    };
+  </script>
+</body>
+</html>
