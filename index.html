@@ -3,26 +3,36 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-  <title>AA GYM 👻 HALLOWEEN (Camera Visible)</title>
+  <title>AA GYM 👻 HALLOWEEN (alpha:true + video under canvas)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
     html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff}
     #gate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:9999;text-align:center;padding:24px}
     #gate button{margin-top:14px;padding:12px 16px;border:0;border-radius:12px;font-weight:800}
-    #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700}
-    
-    /* MindAR 기본 오버레이와 로딩 UI 제거 */
+    #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700;z-index:3}
+
+    /* MindAR 오버레이 숨김 */
     .mindar-ui-overlay,
     .mindar-ui-loading,
     .mindar-ui-scanning,
-    .mindar-ui-scanning * {
-      display: none !important;
-      opacity: 0 !important;
-      background: transparent !important;
+    .mindar-ui-scanning * { display:none !important; opacity:0 !important; background:transparent !important; }
+
+    /* 비디오를 바닥층에, 캔버스는 위층에 투명으로 */
+    video#mindar-video, video[playsinline] {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      display: block !important;
+      opacity: 1 !important;
     }
-    /* 카메라 캔버스가 검게 덮이지 않도록 */
     canvas.a-canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 1 !important;
       background: transparent !important;
     }
   </style>
@@ -38,12 +48,14 @@
   <div id="hint" hidden>마커를 비추면 3D 유령이 나타납니다 👻</div>
 
   <a-scene id="scene" style="display:none"
-    mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=960"
+    mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=970"
+    renderer="alpha:true; antialias:true; physicallyCorrectLights:true;"
     vr-mode-ui="enabled:false"
     device-orientation-permission-ui="enabled:false"
     embedded>
+
     <a-assets timeout="20000">
-      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=960" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
+      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=970" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
@@ -73,6 +85,11 @@
         gate.style.display='none';
         scene.style.display='block';
         hint.hidden=false;
+        // 렌더 시작 후 비디오 강제 표시 (혹시 숨김 상태일 때 대비)
+        setTimeout(()=>{
+          const v=document.querySelector('video#mindar-video')||document.querySelector('video[playsinline]');
+          if(v){ v.style.display='block'; v.style.opacity='1'; }
+        }, 300);
       }catch(e){
         err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
         err.style.display='block';
