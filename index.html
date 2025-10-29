@@ -3,64 +3,97 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-  <title>AA GYM 👻 HALLOWEEN (alpha:true + video under canvas)</title>
+  <title>AA GYM 👻 HALLOWEEN (Video + Scanner)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
     html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff}
     #gate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:9999;text-align:center;padding:24px}
     #gate button{margin-top:14px;padding:12px 16px;border:0;border-radius:12px;font-weight:800}
-    #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700;z-index:3}
+    #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700;z-index:4}
 
     /* MindAR 오버레이 숨김 */
-    .mindar-ui-overlay,
-    .mindar-ui-loading,
-    .mindar-ui-scanning,
-    .mindar-ui-scanning * { display:none !important; opacity:0 !important; background:transparent !important; }
-
-    /* 비디오를 바닥층에, 캔버스는 위층에 투명으로 */
-    video#mindar-video, video[playsinline] {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-      z-index: 0 !important;
-      display: block !important;
-      opacity: 1 !important;
+    .mindar-ui-overlay,.mindar-ui-loading,.mindar-ui-scanning,.mindar-ui-scanning *{
+      display:none!important;opacity:0!important;background:transparent!important;
     }
-    canvas.a-canvas {
-      position: fixed !important;
-      inset: 0 !important;
-      z-index: 1 !important;
-      background: transparent !important;
+
+    /* 비디오를 바닥층으로 */
+    video#mindar-video, video[playsinline]{
+      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;
+      z-index:0!important;display:block!important;opacity:1!important;
+    }
+    canvas.a-canvas{position:fixed!important;inset:0!important;z-index:1!important;background:transparent!important;}
+
+    /* 스캐너 오버레이 (카메라 위, 캔버스 아래/위 선택 가능) */
+    #scanner{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;
+    }
+    #scanner .box{
+      position:relative;width:min(70vw, 70vh);height:min(70vw,70vh);
+      box-shadow:0 0 0 2px rgba(255,255,255,0.08) inset;border-radius:12px;
+      backdrop-filter: blur(0px);
+    }
+    /* 모서리 브래킷 */
+    .corner{position:absolute;width:18%;height:18%;border:3px solid rgba(255,255,255,0.9);}
+    .tl{top:-2px;left:-2px;border-right:none;border-bottom:none;border-radius:12px 0 0 0;}
+    .tr{top:-2px;right:-2px;border-left:none;border-bottom:none;border-radius:0 12px 0 0;}
+    .bl{bottom:-2px;left:-2px;border-right:none;border-top:none;border-radius:0 0 0 12px;}
+    .br{bottom:-2px;right:-2px;border-left:none;border-top:none;border-radius:0 0 12px 0;}
+
+    /* 스윕 라인 */
+    .sweep{
+      position:absolute;left:0;right:0;top:0;height:2px;
+      background:linear-gradient(90deg, transparent, rgba(0,255,170,0.9), transparent);
+      filter: drop-shadow(0 0 6px rgba(0,255,170,0.9));
+      animation:sweepY 2s linear infinite;
+    }
+    @keyframes sweepY{
+      0%{top:6%;opacity:.9}
+      50%{top:94%;opacity:.6}
+      100%{top:6%;opacity:.9}
+    }
+
+    /* 스캐닝 텍스트 */
+    #scanText{
+      position:fixed;left:50%;transform:translateX(-50%);top:12px;
+      padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.35);
+      font-weight:700;letter-spacing:.5px;z-index:3;
     }
   </style>
 </head>
 <body>
   <div id="gate">
     <h2 style="margin:0 0 8px 0;">카메라 권한이 필요합니다</h2>
-    <div>버튼을 눌러 카메라를 켠 뒤 마커를 비추세요.</div>
+    <div>버튼을 눌러 카메라를 켠 뒤 마커를 중앙 네모에 맞춰주세요.</div>
     <button id="startBtn">카메라 켜고 시작하기</button>
     <div id="err" style="color:#ffb3b3;margin-top:10px;display:none;"></div>
   </div>
 
-  <div id="hint" hidden>마커를 비추면 3D 유령이 나타납니다 👻</div>
+  <div id="scanText" hidden>마커를 중앙 네모에 맞춰 스캔 중…</div>
+  <div id="scanner" hidden>
+    <div class="box">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <div class="sweep"></div>
+    </div>
+  </div>
+
+  <div id="hint" hidden>인식되면 유령이 나타납니다 👻</div>
 
   <a-scene id="scene" style="display:none"
-    mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=970"
-    renderer="alpha:true; antialias:true; physicallyCorrectLights:true;"
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false"
-    embedded>
+    mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=980"
+    renderer="alpha:true; antialias:true; physicallyCorrectLights:true"
+    vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" embedded>
 
     <a-assets timeout="20000">
-      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=970" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
+      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=980" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex:0">
+    <a-entity id="target" mindar-image-target="targetIndex:0">
       <a-gltf-model src="#ghost3d" position="0 0 0" scale="0.6 0.6 0.6" rotation="0 0 0">
         <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.08 0"></a-animation>
         <a-animation attribute="rotation" dur="3200" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
@@ -76,6 +109,8 @@
     const scene=document.getElementById('scene');
     const hint=document.getElementById('hint');
     const err=document.getElementById('err');
+    const scanner=document.getElementById('scanner');
+    const scanText=document.getElementById('scanText');
 
     async function startFlow(){
       err.style.display='none';
@@ -84,12 +119,15 @@
         s.getTracks().forEach(t=>t.stop());
         gate.style.display='none';
         scene.style.display='block';
+        // 스캐너 표시
+        scanner.hidden=false;
+        scanText.hidden=false;
         hint.hidden=false;
-        // 렌더 시작 후 비디오 강제 표시 (혹시 숨김 상태일 때 대비)
-        setTimeout(()=>{
-          const v=document.querySelector('video#mindar-video')||document.querySelector('video[playsinline]');
-          if(v){ v.style.display='block'; v.style.opacity='1'; }
-        }, 300);
+
+        // 인식 이벤트 연결: targetFound 시 스캐너 숨김
+        const targetEl=document.getElementById('target');
+        targetEl.addEventListener('targetFound', ()=>{ scanner.hidden=true; scanText.hidden=true; });
+        targetEl.addEventListener('targetLost',  ()=>{ scanner.hidden=false; scanText.hidden=false; });
       }catch(e){
         err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
         err.style.display='block';
