@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-  <title>AA GYM 👻 HALLOWEEN (Clean Minimal)</title>
+  <title>AA GYM 👻 HALLOWEEN (ABS MINIMAL)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
@@ -24,25 +24,23 @@
   <div id="hint" hidden>마커를 비추면 3D 유령이 나타납니다 👻</div>
 
   <a-scene id="scene" style="display:none"
-    mindar-image="imageTargetSrc: ./targets.mind?v=930"
-    color-space="sRGB"
-    renderer="colorManagement:true; physicallyCorrectLights:true; antialias:true"
+    mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=940"
     vr-mode-ui="enabled:false"
     device-orientation-permission-ui="enabled:false"
     embedded>
     <a-assets timeout="20000">
-      <a-asset-item id="ghost3d" src="./ghost.glb?v=930" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
+      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=940" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex:0">
-      <a-gltf-model src="#ghost3d" position="0 0 0" scale="0.8 0.8 0.8" rotation="0 0 0">
+      <a-gltf-model src="#ghost3d" position="0 0 0" scale="0.6 0.6 0.6" rotation="0 0 0">
         <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.08 0"></a-animation>
         <a-animation attribute="rotation" dur="3200" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
       </a-gltf-model>
-      <a-entity light="type:ambient; intensity:0.7"></a-entity>
-      <a-entity light="type:directional; intensity:1.2" position="0.8 1 0.5"></a-entity>
+      <a-entity light="type:ambient; intensity:0.8"></a-entity>
+      <a-entity light="type:directional; intensity:1.1" position="0.8 1 0.5"></a-entity>
     </a-entity>
   </a-scene>
 
