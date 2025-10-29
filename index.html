@@ -94,9 +94,46 @@
 
     <a-entity id="target" mindar-image-target="targetIndex:0">
       <a-gltf-model src="#ghost3d" position="0 0 0" scale="1.0 1.0 1.0" rotation="0 0 0">
-        <a-animation attribute="position" dur="1600" direction="alternate" repeat="indefinite" to="0 0.08 0"></a-animation>
-        <a-animation attribute="rotation" dur="3200" direction="alternate" repeat="indefinite" to="0 10 0"></a-animation>
-      </a-gltf-model>
+  <!-- 위아래 부드럽게 떠오르는 모션 -->
+  <a-animation attribute="position"
+               dur="2500"
+               direction="alternate"
+               repeat="indefinite"
+               to="0 0.12 0"
+               easing="easeInOutSine"></a-animation>
+
+  <!-- 천천히 360도 회전 -->
+  <a-animation attribute="rotation"
+               dur="8000"
+               repeat="indefinite"
+               to="0 360 0"
+               easing="linear"></a-animation>
+
+  <!-- 좌우 살짝 흔들림 (공중에 떠있는 듯) -->
+  <a-animation attribute="position"
+               dur="4000"
+               direction="alternate"
+               repeat="indefinite"
+               from="-0.05 0 0"
+               to="0.05 0 0"
+               easing="easeInOutSine"></a-animation>
+
+  <!-- 빛의 강도(은은한 발광) -->
+  <a-animation attribute="material.emissiveIntensity"
+               dur="3000"
+               direction="alternate"
+               repeat="indefinite"
+               to="1.0"
+               easing="easeInOutSine"></a-animation>
+
+  <!-- 유령이 서서히 회전하며 부드럽게 떠다니는 전체 모션 -->
+  <a-animation attribute="rotation"
+               dur="9000"
+               direction="alternate"
+               repeat="indefinite"
+               to="0 25 10"
+               easing="easeInOutQuad"></a-animation>
+</a-gltf-model>
       <a-entity light="type:ambient; intensity:0.8"></a-entity>
       <a-entity light="type:directional; intensity:1.1" position="0.8 1 0.5"></a-entity>
     </a-entity>
