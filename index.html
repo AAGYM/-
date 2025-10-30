@@ -170,6 +170,64 @@
       }
     }
     startBtn.addEventListener('click', startFlow);
-  </script>
+  const gate = document.getElementById('gate');
+  const startBtn = document.getElementById('startBtn');
+  const scene = document.getElementById('scene');
+  const hint = document.getElementById('hint');
+  const err = document.getElementById('err');
+
+  async function startFlow () {
+    err.style.display = 'none';
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      s.getTracks().forEach(t => t.stop());
+
+      gate.style.display = 'none';
+      scene.style.display = 'block';
+      hint.hidden = false;
+
+      // 🔴 iOS가 첫 렌더를 안 해줄 때 강제로 "다시 그려!" 하기
+      // 1) 로드 직후
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 200);
+
+      // 2) 한 번 더 (iOS가 1번은 씹을 때가 있음)
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 800);
+
+      // 3) 비디오가 뜨면 스타일 강제
+      setTimeout(() => {
+        const v = document.querySelector('video#mindar-video') ||
+                  document.querySelector('video[playsinline]') ||
+                  document.querySelector('video');
+        if (v) {
+          v.style.display = 'block';
+          v.style.opacity = '1';
+          v.style.position = 'fixed';
+          v.style.inset = '0';
+          v.style.width = '100vw';
+          v.style.height = '100vh';
+          v.play?.();
+        }
+      }, 500);
+
+      // 4) 혹시 그래도 안 뜨면 2초마다 한 번씩 "다시 그려" (짧은 시간만)
+      let kick = 0;
+      const kicker = setInterval(() => {
+        window.dispatchEvent(new Event('resize'));
+        kick++;
+        if (kick > 5) clearInterval(kicker); // 5번(≈10초)만
+      }, 2000);
+
+    } catch (e) {
+      err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
+      err.style.display = 'block';
+    }
+  }
+
+  startBtn.addEventListener('click', startFlow);
+</script>
 </body>
 </html>
