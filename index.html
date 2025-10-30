@@ -4,47 +4,59 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
   <title>AA GYM 👻 HALLOWEEN (Video + Scanner)</title>
+
+  <!-- A-Frame & MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <style>
-    html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff}
-    #gate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:9999;text-align:center;padding:24px}
-    #gate button{margin-top:14px;padding:12px 16px;border:0;border-radius:12px;font-weight:800}
-    #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700;z-index:4}
 
-    /* MindAR 오버레이 숨김 */
+  <style>
+    html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,"Noto Sans KR",sans-serif;}
+
+    /* 진입 게이트 */
+    #gate{
+      position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:#000;z-index:9999;text-align:center;padding:24px
+    }
+    #gate button{margin-top:14px;padding:12px 16px;border:0;border-radius:12px;font-weight:800}
+
+    /* 힌트 */
+    #hint{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:18px;
+      background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;font-weight:700;z-index:4
+    }
+
+    /* MindAR 기본 오버레이 숨기기 */
     .mindar-ui-overlay,.mindar-ui-loading,.mindar-ui-scanning,.mindar-ui-scanning *{
       display:none!important;opacity:0!important;background:transparent!important;
     }
 
-    /* 비디오를 바닥층으로 */
+    /* 카메라 비디오를 제일 바닥에 고정 */
     video#mindar-video, video[playsinline]{
-      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;
-      z-index:0!important;display:block!important;opacity:1!important;
+      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;
+      object-fit:cover!important;z-index:0!important;display:block!important;opacity:1!important;
     }
+
+    /* A-Frame 캔버스는 그 위 */
     canvas.a-canvas{position:fixed!important;inset:0!important;z-index:1!important;background:transparent!important;}
 
-    /* 스캐너 오버레이 (카메라 위, 캔버스 아래/위 선택 가능) */
+    /* 스캐너 오버레이 */
     #scanner{
-      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      pointer-events:none;z-index:2;
     }
     #scanner .box{
-      position:relative;width:min(70vw, 70vh);height:min(70vw,70vh);
+      position:relative;width:min(70vw,70vh);height:min(70vw,70vh);
       box-shadow:0 0 0 2px rgba(255,255,255,0.08) inset;border-radius:12px;
-      backdrop-filter: blur(0px);
     }
-    /* 모서리 브래킷 */
     .corner{position:absolute;width:18%;height:18%;border:3px solid rgba(255,255,255,0.9);}
     .tl{top:-2px;left:-2px;border-right:none;border-bottom:none;border-radius:12px 0 0 0;}
     .tr{top:-2px;right:-2px;border-left:none;border-bottom:none;border-radius:0 12px 0 0;}
     .bl{bottom:-2px;left:-2px;border-right:none;border-top:none;border-radius:0 0 0 12px;}
     .br{bottom:-2px;right:-2px;border-left:none;border-top:none;border-radius:0 0 12px 0;}
-
-    /* 스윕 라인 */
     .sweep{
       position:absolute;left:0;right:0;top:0;height:2px;
-      background:linear-gradient(90deg, transparent, rgba(0,255,170,0.9), transparent);
-      filter: drop-shadow(0 0 6px rgba(0,255,170,0.9));
+      background:linear-gradient(90deg,transparent,rgba(0,255,170,.9),transparent);
+      filter:drop-shadow(0 0 6px rgba(0,255,170,.9));
       animation:sweepY 2s linear infinite;
     }
     @keyframes sweepY{
@@ -53,7 +65,7 @@
       100%{top:6%;opacity:.9}
     }
 
-    /* 스캐닝 텍스트 */
+    /* 스캔 텍스트 */
     #scanText{
       position:fixed;left:50%;transform:translateX(-50%);top:12px;
       padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.35);
@@ -62,6 +74,7 @@
   </style>
 </head>
 <body>
+  <!-- 1. 시작 화면 -->
   <div id="gate">
     <h2 style="margin:0 0 8px 0;">카메라 권한이 필요합니다</h2>
     <div>버튼을 눌러 카메라를 켠 뒤 마커를 중앙 네모에 맞춰주세요.</div>
@@ -69,6 +82,7 @@
     <div id="err" style="color:#ffb3b3;margin-top:10px;display:none;"></div>
   </div>
 
+  <!-- 2. 스캐너 UI -->
   <div id="scanner" hidden>
     <div class="box">
       <div class="corner tl"></div>
@@ -78,156 +92,145 @@
       <div class="sweep"></div>
     </div>
   </div>
+  <div id="scanText" hidden>로고를 화면 중앙에 맞춰주세요</div>
 
-  <div id="hint" hidden>에이에이짐 로고가 인식되면 ??? 나타납니다 👻</div>
+  <!-- 3. 하단 힌트 -->
+  <div id="hint" hidden>로고 인식되면 👻 유령이 나타납니다</div>
 
+  <!-- 4. AR 씬 -->
   <a-scene id="scene" style="display:none"
     mindar-image="imageTargetSrc: https://aagym.github.io/-/targets.mind?v=980"
     renderer="alpha:true; antialias:true; physicallyCorrectLights:true"
-    vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" embedded>
+    vr-mode-ui="enabled:false"
+    device-orientation-permission-ui="enabled:false"
+    embedded>
 
     <a-assets timeout="20000">
-      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=980" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
+      <!-- 3D 유령 모델 -->
+      <a-asset-item id="ghost3d" src="https://aagym.github.io/-/ghost.glb?v=980"
+                    response-type="arraybuffer"
+                    crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
+    <!-- 마커 타겟 -->
     <a-entity id="target" mindar-image-target="targetIndex:0">
-      <a-gltf-model src="#ghost3d" position="0 0 0" scale="1.0 1.0 1.0" rotation="0 0 0">
-  <!-- 위아래 부드럽게 떠오르는 모션 -->
-  <a-animation attribute="position"
-               dur="2500"
-               direction="alternate"
-               repeat="indefinite"
-               to="0 0.12 0"
-               easing="easeInOutSine"></a-animation>
+      <!-- 유령 모델 -->
+      <a-gltf-model src="#ghost3d" position="0 0 0" scale="1 1 1" rotation="0 0 0">
 
-  <!-- 천천히 360도 회전 -->
-  <a-animation attribute="rotation"
-               dur="8000"
-               repeat="indefinite"
-               to="0 360 0"
-               easing="linear"></a-animation>
+        <!-- 위아래 둥실 -->
+        <a-animation attribute="position"
+                     dur="2500" direction="alternate" repeat="indefinite"
+                     to="0 0.12 0" easing="easeInOutSine"></a-animation>
 
-  <!-- 좌우 살짝 흔들림 (공중에 떠있는 듯) -->
-  <a-animation attribute="position"
-               dur="4000"
-               direction="alternate"
-               repeat="indefinite"
-               from="-0.05 0 0"
-               to="0.05 0 0"
-               easing="easeInOutSine"></a-animation>
+        <!-- 360도 회전 -->
+        <a-animation attribute="rotation"
+                     dur="8000" repeat="indefinite"
+                     to="0 360 0" easing="linear"></a-animation>
 
-  <!-- 빛의 강도(은은한 발광) -->
-  <a-animation attribute="material.emissiveIntensity"
-               dur="3000"
-               direction="alternate"
-               repeat="indefinite"
-               to="1.0"
-               easing="easeInOutSine"></a-animation>
+        <!-- 좌우 살짝 -->
+        <a-animation attribute="position"
+                     dur="4000" direction="alternate" repeat="indefinite"
+                     from="-0.05 0 0" to="0.05 0 0"
+                     easing="easeInOutSine"></a-animation>
 
-  <!-- 유령이 서서히 회전하며 부드럽게 떠다니는 전체 모션 -->
-  <a-animation attribute="rotation"
-               dur="9000"
-               direction="alternate"
-               repeat="indefinite"
-               to="0 25 10"
-               easing="easeInOutQuad"></a-animation>
-</a-gltf-model>
+        <!-- 은은한 발광 -->
+        <a-animation attribute="material.emissiveIntensity"
+                     dur="3000" direction="alternate" repeat="indefinite"
+                     to="1.0" easing="easeInOutSine"></a-animation>
+
+        <!-- 전체 포즈 살짝 바뀌는 모션 -->
+        <a-animation attribute="rotation"
+                     dur="9000" direction="alternate" repeat="indefinite"
+                     to="0 25 10" easing="easeInOutQuad"></a-animation>
+      </a-gltf-model>
+
+      <!-- 라이트 -->
       <a-entity light="type:ambient; intensity:0.8"></a-entity>
       <a-entity light="type:directional; intensity:1.1" position="0.8 1 0.5"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
-    const gate=document.getElementById('gate');
-    const startBtn=document.getElementById('startBtn');
-    const scene=document.getElementById('scene');
-    const hint=document.getElementById('hint');
-    const err=document.getElementById('err');
-    const scanner=document.getElementById('scanner');
-    const scanText=document.getElementById('scanText');
+    const gate     = document.getElementById('gate');
+    const startBtn = document.getElementById('startBtn');
+    const scene    = document.getElementById('scene');
+    const hint     = document.getElementById('hint');
+    const err      = document.getElementById('err');
+    const scanner  = document.getElementById('scanner');
+    const scanText = document.getElementById('scanText');
+    const targetEl = document.getElementById('target');
 
-    async function startFlow(){
-      err.style.display='none';
-      try{
-        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-        s.getTracks().forEach(t=>t.stop());
-        gate.style.display='none';
-        scene.style.display='block';
-        // 스캐너 표시
-        scanner.hidden=false;
-        scanText.hidden=false;
-        hint.hidden=false;
+    async function startFlow () {
+      err.style.display = 'none';
+      try {
+        // 1) 권한만 먼저 얻기
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        s.getTracks().forEach(t => t.stop());
 
-        // 인식 이벤트 연결: targetFound 시 스캐너 숨김
-        const targetEl=document.getElementById('target');
-        targetEl.addEventListener('targetFound', ()=>{ scanner.hidden=true; scanText.hidden=true; });
-        targetEl.addEventListener('targetLost',  ()=>{ scanner.hidden=false; scanText.hidden=false; });
-      }catch(e){
-        err.textContent='❌ 카메라 접근 실패: '+(e && e.message ? e.message : e);
-        err.style.display='block';
+        // 2) UI 전환
+        gate.style.display  = 'none';
+        scene.style.display = 'block';
+        scanner.hidden      = false;
+        scanText.hidden     = false;
+        hint.hidden         = false;
+
+        // 3) iOS에서 렌더 안 되는 거 강제로 리사이즈
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 800);
+
+        // 4) 비디오 찾아서 강제 재생 + 스타일 고정
+        setTimeout(() => {
+          const v = document.querySelector('video#mindar-video') ||
+                    document.querySelector('video[playsinline]') ||
+                    document.querySelector('video');
+          if (v) {
+            v.setAttribute('playsinline','true');
+            v.setAttribute('muted','true');
+            v.muted = true;
+            v.style.display  = 'block';
+            v.style.opacity  = '1';
+            v.style.position = 'fixed';
+            v.style.inset    = '0';
+            v.style.width    = '100vw';
+            v.style.height   = '100vh';
+            v.play?.();
+          }
+        }, 500);
+
+        // 5) 혹시 그래도 안 뜨면 몇 번 더 리사이즈
+        let kick = 0;
+        const kicker = setInterval(() => {
+          window.dispatchEvent(new Event('resize'));
+          kick++;
+          if (kick > 5) clearInterval(kicker);
+        }, 2000);
+
+        // 6) 마커 인식/놓침 이벤트 → 스캐너 숨기기/보이기
+        if (targetEl) {
+          targetEl.addEventListener('targetFound', () => {
+            scanner.hidden  = true;
+            scanText.hidden = true;
+          });
+          targetEl.addEventListener('targetLost', () => {
+            scanner.hidden  = false;
+            scanText.hidden = false;
+          });
+        }
+
+      } catch (e) {
+        err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
+        err.style.display = 'block';
       }
     }
+
     startBtn.addEventListener('click', startFlow);
-  const gate = document.getElementById('gate');
-  const startBtn = document.getElementById('startBtn');
-  const scene = document.getElementById('scene');
-  const hint = document.getElementById('hint');
-  const err = document.getElementById('err');
 
-  async function startFlow () {
-    err.style.display = 'none';
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      s.getTracks().forEach(t => t.stop());
-
-      gate.style.display = 'none';
-      scene.style.display = 'block';
-      hint.hidden = false;
-
-      // 🔴 iOS가 첫 렌더를 안 해줄 때 강제로 "다시 그려!" 하기
-      // 1) 로드 직후
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 200);
-
-      // 2) 한 번 더 (iOS가 1번은 씹을 때가 있음)
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 800);
-
-      // 3) 비디오가 뜨면 스타일 강제
-      setTimeout(() => {
-        const v = document.querySelector('video#mindar-video') ||
-                  document.querySelector('video[playsinline]') ||
-                  document.querySelector('video');
-        if (v) {
-          v.style.display = 'block';
-          v.style.opacity = '1';
-          v.style.position = 'fixed';
-          v.style.inset = '0';
-          v.style.width = '100vw';
-          v.style.height = '100vh';
-          v.play?.();
-        }
-      }, 500);
-
-      // 4) 혹시 그래도 안 뜨면 2초마다 한 번씩 "다시 그려" (짧은 시간만)
-      let kick = 0;
-      const kicker = setInterval(() => {
-        window.dispatchEvent(new Event('resize'));
-        kick++;
-        if (kick > 5) clearInterval(kicker); // 5번(≈10초)만
-      }, 2000);
-
-    } catch (e) {
-      err.textContent = '❌ 카메라 접근 실패: ' + (e && e.message ? e.message : e);
-      err.style.display = 'block';
-    }
-  }
-
-  startBtn.addEventListener('click', startFlow);
-</script>
+    // 화면 회전하면 다시 그리기
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+    });
+  </script>
 </body>
 </html>
